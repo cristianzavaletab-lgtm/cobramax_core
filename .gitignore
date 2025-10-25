@@ -1,5 +1,41 @@
-echo venv_cobramax/ > .gitignore
-echo __pycache__/ >> .gitignore
-echo *.pyc >> .gitignore
-echo db.sqlite3 >> .gitignore
-echo .env >> .gitignore
+# Entornos virtuales
+venv/
+venv_cobramax/
+.env
+*.env
+
+# Archivos de base de datos locales
+*.sqlite3
+
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Archivos temporales o de logs
+*.log
+*.pot
+*.pyc
+*.tmp
+
+# Archivos de configuración locales
+*.local
+.DS_Store
+
+# Archivos de compilación / cache
+*.egg-info/
+*.egg
+build/
+dist/
+
+# Archivos estáticos generados
+staticfiles/
+media/
+
+# Archivos de IDEs
+.vscode/
+.idea/
+
+# Archivos del sistema
+Thumbs.db
