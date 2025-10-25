@@ -9,6 +9,20 @@ Añade estas variables en el Dashboard → tu servicio → Environment → Add E
 - DJANGO_DEBUG = False
 - DATABASE_URL = postgresql://<usuario>:<contraseña>@<host>:<puerto>/<dbname>
 
+Render proporciona dos tipos de endpoints para su PostgreSQL:
+
+- URL interna (para que los servicios desplegados en Render se conecten entre sí sin exponer la base a Internet):
+
+  postgresql://cobramax_db_user:O3QiI9mSUFVqrVB7VmpvQvqUWlCfSk3z@dpg-d3uedu9r0fns73f54k1g-a/cobramax_db
+
+  Variable recomendada en Render (Environment): `RENDER_INTERNAL_DATABASE_URL`
+
+- URL externa (para conectarte desde tu PC o clientes externos):
+
+  postgresql://cobramax_db_user:O3QiI9mSUFVqrVB7VmpvQvqUWlCfSk3z@dpg-d3uedu9r0fns73f54k1g-a.oregon-postgres.render.com/cobramax_db
+
+  Variable recomendada en Render (Environment) si necesitas que herramientas externas usen la URL: `DATABASE_URL`
+
 Opcionales (según uso):
 - POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT (si prefieres usar variables separadas en lugar de DATABASE_URL)
 - DEFAULT_FROM_EMAIL, EMAIL_HOST, EMAIL_PORT, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_USE_TLS
@@ -52,7 +66,7 @@ Si la base de datos de Render está accesible desde el contenedor/entorno de Ren
 
 ```powershell
 # establecer variables de entorno temporalmente en PowerShell (ejemplo)
-$env:DATABASE_URL='postgresql://usuario:contraseña@host:5432/dbname'
+$env:DATABASE_URL='postgresql://cobramax_db_user:O3QiI9mSUFVqrVB7VmpvQvqUWlCfSk3z@dpg-d3uedu9r0fns73f54k1g-a.oregon-postgres.render.com:5432/cobramax_db'
 & .\venv_cobramax\Scripts\python.exe manage.py migrate
 ```
 
@@ -60,6 +74,22 @@ $env:DATABASE_URL='postgresql://usuario:contraseña@host:5432/dbname'
 ## Troubleshooting
 - Si `collectstatic` falla por `ManifestStaticFilesStorage`, ejecuta `python manage.py collectstatic --noinput` localmente para detectar archivos faltantes o referencias rotas.
 - Si hay errores de conexión a la DB desde local, verifica reglas de firewall y que Render permita conexiones desde tu IP (generalmente Render DBs bloquean conexiones externas; en ese caso ejecutar migraciones en Release Command es la opción correcta).
+
+### Conectarse desde la terminal (psql)
+
+Comando para conectarte desde tu PC (PowerShell / Linux / macOS):
+
+```bash
+PGPASSWORD=O3QiI9mSUFVqrVB7VmpvQvqUWlCfSk3z psql -h dpg-d3uedu9r0fns73f54k1g-a.oregon-postgres.render.com -U cobramax_db_user cobramax_db
+```
+
+Parámetros:
+- `-h`: Hostname externo (por ejemplo `dpg-d3uedu9r0fns73f54k1g-a.oregon-postgres.render.com`)
+- `-U`: Usuario (`cobramax_db_user`)
+- `cobramax_db`: Nombre de la base
+- `PGPASSWORD`: contraseña (se puede usar para evitar el prompt interactivo)
+
+Si tu red no permite conexiones externas a la DB de Render, ejecuta migraciones como Release Command en Render.
 
 
 ---

@@ -76,8 +76,11 @@ TEMPLATES = [
 WSGI_APPLICATION = 'cobramax_core.wsgi.application'
 
 # CONFIGURACIÓN DE BASE DE DATOS (PostgreSQL)
-# Configuración de la base de datos: preferir DATABASE_URL (Render/Heroku style)
-database_url = os.environ.get('DATABASE_URL')
+# Configuración de la base de datos: preferir URL interna de Render si existe,
+# luego DATABASE_URL (externa), y finalmente construir desde POSTGRES_*.
+database_url = None
+# Render puede exponer una URL interna para conexiones desde servicios en la misma VPC
+database_url = os.environ.get('RENDER_INTERNAL_DATABASE_URL') or os.environ.get('DATABASE_URL')
 if not database_url:
     # construir URL a partir de variables POSTGRES_* si existe
     pg_user = os.environ.get('POSTGRES_USER')
