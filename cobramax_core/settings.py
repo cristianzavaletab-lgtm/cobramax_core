@@ -14,7 +14,7 @@ SECRET_KEY = 'django-insecure-ltvkw+4+jzvy)8bv*#j2&a-86*h&4ss@)p3+vwg0f%^5exxx#w
 # MODO DEBUG
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['cobramax-core.onrender.com', 'localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
