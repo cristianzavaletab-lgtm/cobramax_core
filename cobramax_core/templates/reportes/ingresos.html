@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Reporte de Ingresos</h1>
+<p>Total ingresos: {{ total_ingresos }}</p>
+<p>Total pagos: {{ total_pagos }}</p>
+<p>Promedio pago: {{ promedio_pago }}</p>
+<div class="row mb-4">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header"><h5>Ingresos últimos 30 días</h5></div>
+      <div class="card-body">
+        <canvas id="graficoIngresosDetalle" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header"><h5>Clientes por Zona</h5></div>
+      <div class="card-body">
+        <canvas id="graficoClientesZona" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Últimos pagos</h2>
+<div class="table-responsive">
+<table class="table">
+  <thead><tr><th>Fecha</th><th>Cliente</th><th>Monto</th><th>Método</th></tr></thead>
+  <tbody>
+    {% for pago in pagos %}
+      <tr>
+        <td>{{ pago.fecha_pago }}</td>
+        <td>{{ pago.cliente }}</td>
+        <td>{{ pago.monto }}</td>
+        <td>{{ pago.metodo_pago }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="4">No hay pagos para mostrar.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+async function getIngresos(dias=30){
+  const r = await fetch('{% url "api_ingresos_por_dia" %}?dias='+dias);
+  const j = await r.json();
+  return j.datos || [];
+}
+
+async function getClientesZona(){
+  const r = await fetch('{% url "api_clientes_por_zona" %}');
+  const j = await r.json();
+  return j.zonas || [];
+}
+
+function formatCurrency(v){ return 'S/ ' + Number(v).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+document.addEventListener('DOMContentLoaded', async function(){
+  const ingresos = await getIngresos(30);
+  const labels = ingresos.map(d=> new Date(d.fecha).toLocaleDateString());
+  const datos = ingresos.map(d=> Number(d.total || 0));
+  const ctx = document.getElementById('graficoIngresosDetalle');
+  if(ctx){
+    new Chart(ctx.getContext('2d'), {
+      type: 'bar',
+      data: { labels: labels, datasets: [{ label: 'Ingresos (S/)', data: datos, backgroundColor: 'rgba(54,162,235,0.6)' }] },
+      options: { responsive:true, plugins:{ title:{ display:true, text: 'Ingresos últimos 30 días' } }, scales:{ y:{ ticks:{ callback: v=> formatCurrency(v) } } } }
+    });
+  }
+
+  const zonas = await getClientesZona();
+  const ctx2 = document.getElementById('graficoClientesZona');
+  if(ctx2){
+    const labelsZ = zonas.map(z=> z.nombre );
+    const datosZ = zonas.map(z=> Number(z.total_clientes || 0));
+    new Chart(ctx2.getContext('2d'), {
+      type: 'pie',
+      data: { labels: labelsZ, datasets: [{ data: datosZ, backgroundColor: ['#36A2EB','#FF6384','#FFCE56','#4BC0C0','#9966FF'] }] },
+      options: { responsive:true, plugins:{ legend:{ position:'bottom' }, title:{ display:true, text:'Clientes por Zona' } } }
+    });
+  }
+});
+</script>
+{% endblock %}

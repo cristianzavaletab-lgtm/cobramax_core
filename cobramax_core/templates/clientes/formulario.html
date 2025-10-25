@@ -1,0 +1,195 @@
+<!-- templates/clientes/formulario.html -->
+{% extends 'base.html' %}
+
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'lista_clientes' %}" class="btn btn-secondary btn-sm">
+    <i class="fas fa-arrow-left"></i> Volver
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-user-plus"></i> {{ titulo }}
+        </h6>
+    </div>
+    
+    <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            
+            <!-- Información del Usuario -->
+            <h5 class="text-primary mb-3">
+                <i class="fas fa-user"></i> Información Personal
+            </h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre *</label>
+                        {{ form.nombre }}
+                        {% if form.nombre.errors %}
+                            <div class="text-danger small">{{ form.nombre.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Apellido *</label>
+                        {{ form.apellido }}
+                        {% if form.apellido.errors %}
+                            <div class="text-danger small">{{ form.apellido.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">DNI *</label>
+                        {{ form.dni }}
+                        {% if form.dni.errors %}
+                            <div class="text-danger small">{{ form.dni.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">RUC (Opcional)</label>
+                        {{ form.ruc }}
+                        {% if form.ruc.errors %}
+                            <div class="text-danger small">{{ form.ruc.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Email *</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="text-danger small">{{ form.email.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Teléfono Principal *</label>
+                        {{ form.telefono_principal }}
+                        {% if form.telefono_principal.errors %}
+                            <div class="text-danger small">{{ form.telefono_principal.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Teléfono Secundario</label>
+                        {{ form.telefono_secundario }}
+                    </div>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <!-- Ubicación -->
+            <h5 class="text-primary mb-3">
+                <i class="fas fa-map-marker-alt"></i> Ubicación
+            </h5>
+            
+            <div class="mb-3">
+                <label class="form-label">Dirección *</label>
+                {{ form.direccion }}
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label class="form-label">Referencia</label>
+                        {{ form.referencia }}
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Zona *</label>
+                        {{ form.zona }}
+                    </div>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <!-- Información del Servicio -->
+            <h5 class="text-success mb-3">
+                <i class="fas fa-wifi"></i> Información del Servicio
+            </h5>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Fecha de Instalación *</label>
+                        {{ form.fecha_instalacion }}
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Plan Contratado *</label>
+                        {{ form.plan_contratado }}
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Velocidad *</label>
+                        {{ form.velocidad }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Estado *</label>
+                        {{ form.estado }}
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Deuda Actual</label>
+                        {{ form.deuda_actual }}
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Límite de Crédito</label>
+                        {{ form.limite_credito }}
+                    </div>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <div class="text-end">
+                <a href="{% url 'lista_clientes' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar Cliente
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

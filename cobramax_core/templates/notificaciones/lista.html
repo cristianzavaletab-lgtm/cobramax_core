@@ -1,0 +1,171 @@
+<!-- notificaciones/templates/notificaciones/lista.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-list text-primary"></i> Lista de Notificaciones</h1>
+        <div>
+            <a href="{% url 'dashboard_notificaciones' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Volver al Dashboard
+            </a>
+            <a href="{% url 'crear_notificacion' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nueva Notificación
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-filter"></i> Filtros</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="estado" class="form-label">Estado:</label>
+                    <select class="form-select" id="estado" name="estado">
+                        <option value="">Todos los estados</option>
+                        {% for estado_val, estado_label in estados %}
+                        <option value="{{ estado_val }}" 
+                                {% if filtros_aplicados.estado == estado_val %}selected{% endif %}>
+                            {{ estado_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="tipo" class="form-label">Tipo:</label>
+                    <select class="form-select" id="tipo" name="tipo">
+                        <option value="">Todos los tipos</option>
+                        {% for tipo_val, tipo_label in tipos %}
+                        <option value="{{ tipo_val }}" 
+                                {% if filtros_aplicados.tipo == tipo_val %}selected{% endif %}>
+                            {{ tipo_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="canal" class="form-label">Canal:</label>
+                    <select class="form-select" id="canal" name="canal">
+                        <option value="">Todos los canales</option>
+                        {% for canal_val, canal_label in canales %}
+                        <option value="{{ canal_val }}" 
+                                {% if filtros_aplicados.canal == canal_val %}selected{% endif %}>
+                            {{ canal_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Notificaciones -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Notificaciones Encontradas: {{ notificaciones.count }}</h6>
+        </div>
+        <div class="card-body">
+            {% if notificaciones %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Tipo</th>
+                            <th>Cliente</th>
+                            <th>Asunto/Mensaje</th>
+                            <th>Canal</th>
+                            <th>Estado</th>
+                            <th>Programada</th>
+                            <th>Creada Por</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for notificacion in notificaciones %}
+                        <tr>
+                            <td><strong>#{{ notificacion.id }}</strong></td>
+                            <td>
+                                <span class="badge badge-{{ notificacion.tipo|default:'secondary' }}">
+                                    {{ notificacion.get_tipo_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <strong>{{ notificacion.cliente.nombre_completo }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ notificacion.cliente.dni }} | {{ notificacion.cliente.zona.nombre }}
+                                </small>
+                            </td>
+                            <td>
+                                <strong>{{ notificacion.asunto }}</strong>
+                                <br>
+                                <small class="text-muted">{{ notificacion.mensaje|truncatewords:10 }}</small>
+                            </td>
+                            <td>
+                                <i class="fas fa-{{ notificacion.canal }} text-{{ notificacion.canal }}"></i>
+                                {{ notificacion.get_canal_display }}
+                            </td>
+                            <td>
+                                <span class="badge badge-{% if notificacion.estado == 'enviado' %}success{% elif notificacion.estado == 'pendiente' %}warning{% elif notificacion.estado == 'programado' %}info{% else %}danger{% endif %}">
+                                    {{ notificacion.get_estado_display }}
+                                </span>
+                                {% if notificacion.enviada_en %}
+                                <br><small>{{ notificacion.enviada_en|date:"H:i" }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if notificacion.programada_para %}
+                                {{ notificacion.programada_para|date:"d/m/Y H:i" }}
+                                {% else %}
+                                <span class="text-muted">Inmediata</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ notificacion.creada_por.get_full_name }}
+                                <br>
+                                <small>{{ notificacion.creada_en|date:"d/m/Y" }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'detalle_notificacion' notificacion.id %}" 
+                                       class="btn btn-info" title="Ver detalle">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if notificacion.estado == 'fallido' %}
+                                    <a href="{% url 'reenviar_notificacion' notificacion.id %}" 
+                                       class="btn btn-warning" title="Reenviar">
+                                        <i class="fas fa-redo"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h4>No se encontraron notificaciones</h4>
+                <p class="text-muted">No hay notificaciones que coincidan con los filtros aplicados.</p>
+                <a href="{% url 'crear_notificacion' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Crear Primera Notificación
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

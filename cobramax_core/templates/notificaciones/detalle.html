@@ -1,0 +1,230 @@
+<!-- notificaciones/templates/notificaciones/detalle.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-eye text-primary"></i> Detalle de Notificación</h1>
+        <div>
+            <a href="{% url 'lista_notificaciones' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Volver a la Lista
+            </a>
+            {% if notificacion.estado == 'fallido' %}
+            <a href="{% url 'reenviar_notificacion' notificacion.id %}" class="btn btn-warning">
+                <i class="fas fa-redo"></i> Reenviar
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Información Principal -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Información de la Notificación</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Tipo:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <span class="badge badge-{{ notificacion.tipo|default:'secondary' }}">
+                                {{ notificacion.get_tipo_display }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Canal:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <i class="fas fa-{{ notificacion.canal }} text-{{ notificacion.canal }}"></i>
+                            {{ notificacion.get_canal_display }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Estado:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <span class="badge badge-{% if notificacion.estado == 'enviado' %}success{% elif notificacion.estado == 'pendiente' %}warning{% elif notificacion.estado == 'programado' %}info{% else %}danger{% endif %}">
+                                {{ notificacion.get_estado_display }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Asunto:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ notificacion.asunto }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Mensaje:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="alert alert-light border">
+                                {{ notificacion.mensaje|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if notificacion.error %}
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Error:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="alert alert-danger">
+                                {{ notificacion.error }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Información Secundaria -->
+        <div class="col-lg-4">
+            <!-- Información del Cliente -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Información del Cliente</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="h5 font-weight-bold text-gray-800">{{ notificacion.cliente.nombre_completo }}</div>
+                        <div class="text-muted">DNI: {{ notificacion.cliente.dni }}</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12 mb-2">
+                            <i class="fas fa-phone text-primary"></i>
+                            {{ notificacion.cliente.telefono_principal }}
+                        </div>
+                        <div class="col-12 mb-2">
+                            <i class="fas fa-envelope text-primary"></i>
+                            {{ notificacion.cliente.email|default:"No especificado" }}
+                        </div>
+                        <div class="col-12 mb-2">
+                            <i class="fas fa-map-marker-alt text-primary"></i>
+                            {{ notificacion.cliente.zona.nombre }}
+                        </div>
+                        <div class="col-12">
+                            <i class="fas fa-user text-primary"></i>
+                            {{ notificacion.cliente.cobrador_asignado.get_full_name|default:"No asignado" }}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 text-center">
+                        <a href="{% url 'detalle_cliente' notificacion.cliente.id %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-user"></i> Ver Cliente
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metadatos -->
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Metadatos</h6>
+                </div>
+                <div class="card-body">
+                    <div class="small">
+                        <div class="mb-2">
+                            <strong>Creada por:</strong><br>
+                            {{ notificacion.creada_por.get_full_name }}
+                        </div>
+                        
+                        <div class="mb-2">
+                            <strong>Fecha creación:</strong><br>
+                            {{ notificacion.creada_en|date:"d/m/Y H:i" }}
+                        </div>
+                        
+                        {% if notificacion.programada_para %}
+                        <div class="mb-2">
+                            <strong>Programada para:</strong><br>
+                            {{ notificacion.programada_para|date:"d/m/Y H:i" }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if notificacion.enviada_en %}
+                        <div class="mb-2">
+                            <strong>Enviada en:</strong><br>
+                            {{ notificacion.enviada_en|date:"d/m/Y H:i" }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if notificacion.id_externo %}
+                        <div class="mb-2">
+                            <strong>ID Externo:</strong><br>
+                            <code>{{ notificacion.id_externo }}</code>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificaciones Similares -->
+    {% if notificaciones_similares %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Notificaciones Similares</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Canal</th>
+                                    <th>Estado</th>
+                                    <th>Mensaje</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for similar in notificaciones_similares %}
+                                <tr>
+                                    <td>{{ similar.creada_en|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ similar.tipo|default:'secondary' }}">
+                                            {{ similar.get_tipo_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ similar.get_canal_display }}</td>
+                                    <td>
+                                        <span class="badge badge-{% if similar.estado == 'enviado' %}success{% else %}warning{% endif %}">
+                                            {{ similar.get_estado_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small>{{ similar.mensaje|truncatewords:8 }}</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

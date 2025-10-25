@@ -1,0 +1,133 @@
+<!-- notificaciones/templates/notificaciones/plantillas.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-file-alt text-primary"></i> Plantillas de Notificación</h1>
+        <div>
+            <a href="{% url 'dashboard_notificaciones' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Volver al Dashboard
+            </a>
+            <a href="{% url 'crear_plantilla' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nueva Plantilla
+            </a>
+        </div>
+    </div>
+
+    <!-- Lista de Plantillas -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Plantillas Disponibles</h6>
+        </div>
+        <div class="card-body">
+            {% if plantillas %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Canal</th>
+                            <th>Asunto</th>
+                            <th>Estado</th>
+                            <th>Fecha Creación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for plantilla in plantillas %}
+                        <tr>
+                            <td>
+                                <strong>{{ plantilla.nombre }}</strong>
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ plantilla.tipo|default:'secondary' }}">
+                                    {{ plantilla.get_tipo_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <i class="fas fa-{{ plantilla.canal }} text-{{ plantilla.canal }}"></i>
+                                {{ plantilla.get_canal_display }}
+                            </td>
+                            <td>
+                                {{ plantilla.asunto|truncatewords:5 }}
+                            </td>
+                            <td>
+                                {% if plantilla.activa %}
+                                <span class="badge badge-success">Activa</span>
+                                {% else %}
+                                <span class="badge badge-secondary">Inactiva</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ plantilla.creada_en|date:"d/m/Y" }}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'editar_plantilla' plantilla.id %}" 
+                                       class="btn btn-info" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'toggle_plantilla' plantilla.id %}" 
+                                       class="btn btn-{% if plantilla.activa %}warning{% else %}success{% endif %}" 
+                                       title="{% if plantilla.activa %}Desactivar{% else %}Activar{% endif %}">
+                                        <i class="fas fa-{% if plantilla.activa %}times{% else %}check{% endif %}"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                <h4>No hay plantillas configuradas</h4>
+                <p class="text-muted">Comienza creando tu primera plantilla de notificación.</p>
+                <a href="{% url 'crear_plantilla' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Crear Primera Plantilla
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Información de Variables -->
+    <div class="card shadow mt-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-info-circle"></i> Variables Disponibles para Plantillas
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Variables del Cliente:</h6>
+                    <ul class="list-unstyled">
+                        <li><code>{nombre}</code> - Nombre completo del cliente</li>
+                        <li><code>{deuda}</code> - Deuda actual del cliente</li>
+                        <li><code>{servicio}</code> - Tipo de servicio contratado</li>
+                        <li><code>{zona}</code> - Zona del cliente</li>
+                        <li><code>{cobrador}</code> - Nombre del cobrador asignado</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>Variables del Sistema:</h6>
+                    <ul class="list-unstyled">
+                        <li><code>{fecha_limite}</code> - Fecha límite de pago</li>
+                        <li><code>{monto_pagado}</code> - Monto del último pago</li>
+                        <li><code>{fecha_actual}</code> - Fecha actual</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="alert alert-info mt-3">
+                <strong>Ejemplo:</strong> "Hola {nombre}, tu deuda actual es {deuda}. Por favor realiza el pago antes del {fecha_limite}."
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

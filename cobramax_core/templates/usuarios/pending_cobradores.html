@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Cobradores Pendientes{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <h5>Cobradores pendientes de aprobación</h5>
+    </div>
+    <div class="card-body">
+      {% if pendientes %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Zona solicitada</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in pendientes %}
+            <tr>
+              <td>{{ u.username }}</td>
+              <td>{{ u.get_full_name }}</td>
+              <td>{{ u.email }}</td>
+              <td>{% if u.zona_set.first %}{{ u.zona_set.first.nombre }}{% else %}-{% endif %}</td>
+              <td>
+                <form method="post" action="{% url 'approve_cobrador' u.id %}" style="display:inline">{% csrf_token %}
+                  <button class="btn btn-sm btn-success">Aprobar</button>
+                </form>
+                <form method="post" action="{% url 'reject_cobrador' u.id %}" style="display:inline" class="ms-2">{% csrf_token %}
+                  <button class="btn btn-sm btn-danger">Rechazar</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p>No hay cobradores pendientes</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

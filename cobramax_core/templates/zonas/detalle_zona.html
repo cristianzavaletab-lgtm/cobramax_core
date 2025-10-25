@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-map-marked-alt"></i> Zona: {{ zona.nombre }}</h2>
+        <a href="{% url 'lista_zonas' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Información de la Zona</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="30%">Nombre:</th>
+                            <td>{{ zona.nombre }}</td>
+                        </tr>
+                        <tr>
+                            <th>Código:</th>
+                            <td><span class="badge bg-primary">{{ zona.codigo }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Descripción:</th>
+                            <td>{{ zona.descripcion|default:"Sin descripción" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Cobrador asignado:</th>
+                            <td>
+                                {% if zona.cobrador %}
+                                {{ zona.cobrador.get_full_name|default:zona.cobrador.username }}
+                                <small class="text-muted">({{ zona.cobrador.email }})</small>
+                                {% else %}
+                                <span class="text-danger">Sin asignar</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Total clientes:</th>
+                            <td><span class="badge bg-info">{{ zona.total_clientes }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Estado:</th>
+                            <td>
+                                <span class="badge bg-{% if zona.activa %}success{% else %}danger{% endif %}">
+                                    {{ zona.activa|yesno:"Activa,Inactiva" }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% if zona.latitud and zona.longitud %}
+                        <tr>
+                            <th>Coordenadas:</th>
+                            <td>
+                                <i class="fas fa-map-marker-alt"></i>
+                                {{ zona.latitud }}, {{ zona.longitud }}
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Acciones</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'mapa_zonas' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-map"></i> Ver en Mapa
+                        </a>
+                        {% if user.tipo_usuario == 'admin' %}
+                        <a href="/admin/zonas/zona/{{ zona.id }}/change/" class="btn btn-outline-warning">
+                            <i class="fas fa-edit"></i> Editar Zona
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

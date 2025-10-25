@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-map-marker-alt"></i> Mapa de Zonas</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div id="map" style="height: 500px;"></div>
+    </div>
+  </div>
+</div>
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="" crossorigin="" />
+<style>
+  #map { border: 1px solid #ccc; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="" crossorigin=""></script>
+<script>
+fetch('{% url "api_zonas_geo" %}')
+  .then(r => r.json())
+  .then(data => {
+    const zonas = data.zonas;
+    const map = L.map('map').setView([ -12.0464, -77.0428 ], 10); // Default to Lima coord as example
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+    }).addTo(map);
+
+    zonas.forEach(z => {
+      if (z.lat && z.lng) {
+        const marker = L.marker([z.lat, z.lng]).addTo(map);
+        marker.bindPopup(`<strong>${z.nombre}</strong><br/>Clientes: ${z.total_clientes}`);
+      }
+    });
+  })
+  .catch(err => {
+    console.error('Error cargando zonas geo', err);
+  });
+</script>
+{% endblock %}
+{% endblock %}

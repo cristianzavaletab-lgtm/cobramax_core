@@ -1,0 +1,323 @@
+<!-- templates/notificaciones/dashboard.html -->
+{% extends 'base.html' %}
+
+{% block page_title %}Notificaciones{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Colores MIRAMAX */
+    :root {
+        --miramax-orange: #FF6600;
+        --miramax-dark: #1a1a1a;
+        --miramax-light-orange: #FF8533;
+        --miramax-gray: #f5f5f5;
+    }
+    
+    .card-miramax {
+        border-left: 4px solid var(--miramax-orange);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .card-miramax:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(255, 102, 0, 0.2);
+    }
+    
+    .btn-miramax {
+        background: linear-gradient(135deg, var(--miramax-orange), var(--miramax-light-orange));
+        border: none;
+        color: white;
+        transition: all 0.3s;
+    }
+    
+    .btn-miramax:hover {
+        background: linear-gradient(135deg, var(--miramax-light-orange), var(--miramax-orange));
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(255, 102, 0, 0.4);
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border-left: 5px solid var(--miramax-orange);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--miramax-orange), var(--miramax-light-orange));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+    }
+    
+    .notification-item {
+        border-left: 3px solid var(--miramax-orange);
+        padding: 15px;
+        margin-bottom: 10px;
+        background: white;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .notification-item:hover {
+        background: var(--miramax-gray);
+        transform: translateX(5px);
+    }
+    
+    .badge-miramax {
+        background: var(--miramax-orange);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+    }
+    
+    .progress-miramax {
+        background: var(--miramax-gray);
+        height: 25px;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .progress-bar-miramax {
+        background: linear-gradient(90deg, var(--miramax-orange), var(--miramax-light-orange));
+        color: white;
+        font-weight: bold;
+    }
+    
+    .table-miramax thead {
+        background: linear-gradient(135deg, var(--miramax-dark), #333);
+        color: white;
+    }
+    
+    .table-miramax tbody tr:hover {
+        background: rgba(255, 102, 0, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'crear_notificacion' %}" class="btn btn-miramax btn-sm">
+    <i class="fas fa-plus"></i> Nueva Notificación
+</a>
+<a href="{% url 'notificacion_masiva' %}" class="btn btn-miramax btn-sm">
+    <i class="fas fa-bullhorn"></i> Envío Masivo
+</a>
+<a href="{% url 'lista_plantillas' %}" class="btn btn-miramax btn-sm">
+    <i class="fas fa-file-alt"></i> Plantillas
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Estadísticas Principales -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-xs font-weight-bold text-uppercase mb-1" style="color: var(--miramax-orange);">
+                        Total Notificaciones
+                    </div>
+                    <div class="h3 mb-0 font-weight-bold text-gray-800">
+                        {{ total_notificaciones }}
+                    </div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card" style="border-left-color: #FFA500;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-xs font-weight-bold text-uppercase mb-1" style="color: #FFA500;">
+                        Pendientes
+                    </div>
+                    <div class="h3 mb-0 font-weight-bold text-gray-800">
+                        {{ notificaciones_pendientes }}
+                    </div>
+                </div>
+                <div class="stat-icon" style="background: linear-gradient(135deg, #FFA500, #FFB733);">
+                    <i class="fas fa-clock"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card" style="border-left-color: #28a745;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-xs font-weight-bold text-uppercase mb-1" style="color: #28a745;">
+                        Enviadas
+                    </div>
+                    <div class="h3 mb-0 font-weight-bold text-gray-800">
+                        {{ notificaciones_enviadas }}
+                    </div>
+                </div>
+                <div class="stat-icon" style="background: linear-gradient(135deg, #28a745, #34ce57);">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card" style="border-left-color: #dc3545;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-xs font-weight-bold text-uppercase mb-1" style="color: #dc3545;">
+                        Fallidas
+                    </div>
+                    <div class="h3 mb-0 font-weight-bold text-gray-800">
+                        {{ notificaciones_fallidas }}
+                    </div>
+                </div>
+                <div class="stat-icon" style="background: linear-gradient(135deg, #dc3545, #e4606d);">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notificaciones Recientes -->
+<div class="card shadow mb-4 card-miramax">
+    <div class="card-header py-3" style="background: linear-gradient(135deg, var(--miramax-dark), #333); color: white;">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold">
+                <i class="fas fa-history"></i> Notificaciones Recientes
+            </h6>
+            <a href="{% url 'lista_notificaciones' %}" class="btn btn-sm" style="background: var(--miramax-orange); color: white;">
+                Ver Todas
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if notificaciones_recientes %}
+            <div class="table-responsive">
+                <table class="table table-hover table-miramax">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user"></i> Cliente</th>
+                            <th><i class="fas fa-tag"></i> Tipo</th>
+                            <th><i class="fas fa-comment"></i> Mensaje</th>
+                            <th><i class="fas fa-paper-plane"></i> Canal</th>
+                            <th><i class="fas fa-info-circle"></i> Estado</th>
+                            <th><i class="fas fa-calendar"></i> Fecha</th>
+                            <th><i class="fas fa-cog"></i> Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for notif in notificaciones_recientes %}
+                        <tr>
+                            <td class="font-weight-bold">{{ notif.cliente.nombre_completo }}</td>
+                            <td>
+                                <span class="badge-miramax">
+                                    {{ notif.get_tipo_display }}
+                                </span>
+                            </td>
+                            <td>{{ notif.mensaje|truncatewords:10 }}</td>
+                            <td>
+                                <i class="fab fa-{% if notif.canal == 'whatsapp' %}whatsapp text-success{% elif notif.canal == 'email' %}envelope text-primary{% else %}comment-alt text-info{% endif %} fa-lg"></i>
+                            </td>
+                            <td>
+                                {% if notif.estado == 'enviado' %}
+                                    <span class="badge badge-success"><i class="fas fa-check"></i> Enviado</span>
+                                {% elif notif.estado == 'pendiente' %}
+                                    <span class="badge badge-warning"><i class="fas fa-clock"></i> Pendiente</span>
+                                {% else %}
+                                    <span class="badge badge-danger"><i class="fas fa-times"></i> Fallido</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ notif.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <a href="{% url 'detalle_notificacion' notif.id %}" class="btn btn-sm btn-info" title="Ver Detalle">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if notif.estado == 'fallido' %}
+                                <a href="{% url 'reenviar_notificacion' notif.id %}" class="btn btn-sm btn-warning" title="Reenviar">
+                                    <i class="fas fa-redo"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+                <p class="text-muted">No hay notificaciones recientes</p>
+                <a href="{% url 'crear_notificacion' %}" class="btn btn-miramax">
+                    <i class="fas fa-plus"></i> Crear Primera Notificación
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Estadísticas Gráficas -->
+<div class="row">
+    <!-- Tasa de Éxito -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow card-miramax">
+            <div class="card-header py-3" style="background: var(--miramax-orange); color: white;">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-chart-pie"></i> Tasa de Éxito (Últimos 7 días)
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                <h2 class="display-4 font-weight-bold" style="color: var(--miramax-orange);">
+                    {{ tasa_exito }}%
+                </h2>
+                <div class="progress-miramax mt-3">
+                    <div class="progress-bar progress-bar-miramax" role="progressbar" style="width: {{ tasa_exito }}%;">
+                        {{ tasa_exito }}% Exitosas
+                    </div>
+                </div>
+                <p class="text-muted mt-3">
+                    <i class="fas fa-info-circle"></i> Basado en los últimos 7 días de envíos
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notificaciones por Tipo -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow card-miramax">
+            <div class="card-header py-3" style="background: var(--miramax-dark); color: white;">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-chart-bar"></i> Notificaciones por Tipo
+                </h6>
+            </div>
+            <div class="card-body">
+                {% for item in notificaciones_por_tipo %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <strong style="color: var(--miramax-orange);">
+                            <i class="fas fa-tag"></i> {{ item.tipo|title }}
+                        </strong>
+                        <span class="badge-miramax">{{ item.total }}</span>
+                    </div>
+                    <div class="progress-miramax">
+                        <div class="progress-bar progress-bar-miramax" style="width: {{ item.total }}%"></div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center text-muted">No hay datos disponibles</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

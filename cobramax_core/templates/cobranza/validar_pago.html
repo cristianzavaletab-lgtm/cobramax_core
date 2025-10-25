@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h4 class="mb-0 text-white"><i class="fas fa-check-circle"></i> Validar Pago</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Pago a validar:</strong> {{ pago.codigo_transaccion }}<br>
+                        <strong>Cliente:</strong> {{ pago.cliente.nombre_completo }}<br>
+                        <strong>Monto:</strong> S/ {{ pago.monto }}<br>
+                        <strong>Método:</strong> {{ pago.get_metodo_pago_display }}
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Acción:</label>
+                            <div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="accion" 
+                                           id="aprobar" value="aprobar" checked>
+                                    <label class="form-check-label text-success" for="aprobar">
+                                        <i class="fas fa-check"></i> Aprobar y Completar Pago
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="accion" 
+                                           id="rechazar" value="rechazar">
+                                    <label class="form-check-label text-danger" for="rechazar">
+                                        <i class="fas fa-times"></i> Rechazar Pago
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="motivo-container" style="display: none;">
+                            <label for="motivo" class="form-label">Motivo del rechazo:</label>
+                            <textarea class="form-control" id="motivo" name="motivo" 
+                                      rows="3" placeholder="Especificar el motivo del rechazo..."></textarea>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Advertencia:</strong> Esta acción no se puede deshacer. Al aprobar, se reducirá la deuda del cliente automáticamente.
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'detalle_pago' pago.id %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-check"></i> Confirmar Validación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const aprobarRadio = document.getElementById('aprobar');
+    const rechazarRadio = document.getElementById('rechazar');
+    const motivoContainer = document.getElementById('motivo-container');
+    
+    function toggleMotivo() {
+        if (rechazarRadio.checked) {
+            motivoContainer.style.display = 'block';
+        } else {
+            motivoContainer.style.display = 'none';
+        }
+    }
+    
+    aprobarRadio.addEventListener('change', toggleMotivo);
+    rechazarRadio.addEventListener('change', toggleMotivo);
+    
+    // Inicializar
+    toggleMotivo();
+});
+</script>
+{% endblock %}

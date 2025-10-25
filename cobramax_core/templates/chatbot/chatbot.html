@@ -1,0 +1,393 @@
+<!-- chatbot/templates/chatbot/chatbot.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white rounded-circle p-2 me-3">
+                            <i class="fas fa-robot text-primary fa-2x"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-0">🤖 Asistente Virtual COBRA-MAX</h4>
+                            <small class="opacity-75">Estoy aquí para ayudarte 24/7</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Bienvenida -->
+                    <div class="text-center mb-4">
+                        <h5 class="text-muted">¡Hola! Soy tu asistente virtual</h5>
+                        <p class="text-muted">Puedo ayudarte con:</p>
+                    </div>
+
+                    <!-- Categorías de ayuda -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="card text-center h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <i class="fas fa-credit-card fa-2x text-primary mb-2"></i>
+                                    <h6 class="card-title">Pagos</h6>
+                                    <small class="text-muted">Facturas y cobranza</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="card text-center h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <i class="fas fa-wifi fa-2x text-success mb-2"></i>
+                                    <h6 class="card-title">Técnico</h6>
+                                    <small class="text-muted">Internet y conexión</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="card text-center h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <i class="fas fa-cogs fa-2x text-warning mb-2"></i>
+                                    <h6 class="card-title">Servicio</h6>
+                                    <small class="text-muted">Planes y contratos</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="card text-center h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <i class="fas fa-user fa-2x text-info mb-2"></i>
+                                    <h6 class="card-title">Cuenta</h6>
+                                    <small class="text-muted">Gestión personal</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Búsqueda -->
+                    <div class="mb-4">
+                        <form id="chatbotForm" class="d-flex">
+                            {% csrf_token %}
+                            <input type="text" 
+                                   class="form-control form-control-lg me-2" 
+                                   id="consultaInput"
+                                   placeholder="Escribe tu pregunta aquí... Ej: ¿Cómo puedo pagar mi factura?"
+                                   autocomplete="off">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane"></i> Enviar
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Respuesta -->
+                    <div id="respuestaContainer" class="d-none">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <div id="respuestaContent"></div>
+                                <div id="sugerenciasContainer" class="mt-3"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preguntas frecuentes populares -->
+                    <div class="mt-5">
+                        <h6 class="text-muted mb-3">📌 Preguntas frecuentes:</h6>
+                        <div class="row">
+                            {% for pregunta in preguntas_populares %}
+                            <div class="col-md-6 mb-2">
+                                <button class="btn btn-outline-secondary btn-sm w-100 text-start pregunta-rapida" 
+                                        data-pregunta="{{ pregunta.pregunta }}">
+                                    <small>{{ pregunta.pregunta }}</small>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        ¿No encuentras lo que buscas? <a href="#" id="contactarAgente">Contacta con un agente</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ticket -->
+<div class="modal fade" id="ticketModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📝 Contactar con agente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>El asistente virtual no pudo resolver tu consulta. ¿Deseas que un agente humano te contacte?</p>
+                <div class="alert alert-info">
+                    <small>
+                        <i class="fas fa-clock"></i> Tiempo de respuesta: 2-4 horas<br>
+                        <i class="fas fa-phone"></i> Canal: WhatsApp / Llamada
+                    </small>
+                </div>
+                    <div class="mb-3">
+                        <label for="ticketDescripcion" class="form-label">Describe brevemente tu problema (opcional)</label>
+                        <textarea id="ticketDescripcion" class="form-control" rows="3" placeholder="Añade detalles que ayuden al agente..."></textarea>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmarTicket">Sí, contactar agente</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.pregunta-rapida:hover {
+    background-color: #e9ecef;
+    border-color: #6c757d;
+}
+
+#respuestaContainer {
+    transition: all 0.3s ease;
+}
+
+.chat-bubble {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    margin-bottom: 8px;
+}
+
+.chat-bubble.bot {
+    background: #e3f2fd;
+    border-bottom-left-radius: 4px;
+}
+
+.chat-bubble.user {
+    background: #007bff;
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('chatbotForm');
+    const input = document.getElementById('consultaInput');
+    const respuestaContainer = document.getElementById('respuestaContainer');
+    const respuestaContent = document.getElementById('respuestaContent');
+    const sugerenciasContainer = document.getElementById('sugerenciasContainer');
+    const contactarAgente = document.getElementById('contactarAgente');
+    const confirmarTicket = document.getElementById('confirmarTicket');
+    const ticketModal = new bootstrap.Modal(document.getElementById('ticketModal'));
+
+        // Enviar consulta
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const consulta = input.value.trim();
+        
+        if (!consulta) return;
+        
+    // Mostrar loading / typing
+    const sendBtn = form.querySelector('button[type="submit"]');
+    sendBtn.disabled = true;
+    respuestaContent.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Consultando al asistente...</p></div>';
+    respuestaContainer.classList.remove('d-none');
+        
+        // Enviar petición AJAX al endpoint que soporta OpenAI o fallback
+        fetch('{% url "chatbot_send" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ message: consulta })
+        })
+        .then(async response => {
+            if (response.status === 429) {
+                // Rate limited
+                respuestaContent.innerHTML = `<div class="alert alert-warning">Has alcanzado el límite de consultas. Por favor intenta de nuevo en unos segundos.</div>`;
+                sendBtn.disabled = false;
+                return null;
+            }
+            const data = await response.json();
+            return data;
+        })
+        .then(data => {
+            if (!data) return;
+            // Si hay conversacion_id, cargar historial y renderizar
+            if (data.success && data.conversacion_id) {
+                fetch('{% url "chatbot_history" 0 %}'.replace('/0/', '/' + data.conversacion_id + '/'), {
+                    method: 'GET',
+                    headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+                })
+                .then(r => r.json())
+                .then(hist => {
+                    if (hist.success) {
+                        // Renderizar mensajes
+                        let html = '';
+                        hist.mensajes.forEach(m => {
+                            const cls = m.tipo === 'bot' ? 'chat-bubble bot' : (m.tipo === 'usuario' ? 'chat-bubble user' : 'chat-bubble agent');
+                            html += `<div class="${cls}"><small class="text-muted">${new Date(m.timestamp).toLocaleString()}</small><br>${m.contenido}</div>`;
+                        });
+                        respuestaContent.innerHTML = html;
+                        respuestaContainer.classList.remove('d-none');
+                        sugerenciasContainer.innerHTML = '';
+                    }
+                })
+                .catch(err => console.error('Hist error', err));
+            }
+
+            if (data.success) {
+                // Si no se cargó historial, mostrar respuesta simple
+                if (!data.conversacion_id) {
+                    respuestaContent.innerHTML = `
+                        <div class="chat-bubble bot">
+                            <strong>🤖 Asistente:</strong><br>
+                            ${data.respuesta}
+                        </div>
+                    `;
+                }
+                
+                // Mostrar sugerencias
+                if (data.sugerencias && data.sugerencias.length > 0) {
+                    let sugerenciasHTML = '<h6 class="mt-3">🔍 También puedes consultar:</h6>';
+                    data.sugerencias.forEach(sug => {
+                        sugerenciasHTML += `<button class="btn btn-outline-primary btn-sm me-2 mb-2 pregunta-sugerida" data-pregunta="${sug.pregunta}">${sug.pregunta}</button>`;
+                    });
+                    sugerenciasContainer.innerHTML = sugerenciasHTML;
+                } else {
+                    sugerenciasContainer.innerHTML = '';
+                }
+                
+                // Mostrar opción de ticket si es necesario
+                if (data.sugerir_ticket) {
+                    sugerenciasContainer.innerHTML += `
+                        <div class="mt-3">
+                            <button class="btn btn-warning btn-sm" onclick="ticketModal.show()">
+                                <i class="fas fa-headset"></i> Contactar con agente
+                            </button>
+                        </div>
+                    `;
+                }
+            } else {
+                respuestaContent.innerHTML = `
+                    <div class="chat-bubble bot">
+                        <strong>🤖 Asistente:</strong><br>
+                        ${data.mensaje || data.respuesta || 'Lo siento, hubo un error. Por favor intenta nuevamente.'}
+                    </div>
+                `;
+                
+                if (data.sugerir_ticket) {
+                    sugerenciasContainer.innerHTML = `
+                        <button class="btn btn-warning btn-sm" id="crearTicketBtn">
+                            <i class="fas fa-headset"></i> Solicitar atención humana
+                        </button>
+                    `;
+                    // Attach handler
+                    document.getElementById('crearTicketBtn').addEventListener('click', function() {
+                        // Crear ticket vía AJAX
+                        fetch('{% url "chatbot_create_ticket" %}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                            },
+                            body: JSON.stringify({ mensaje: consulta, conversacion_id: data.conversacion_id })
+                        })
+                        .then(r => r.json())
+                        .then(resp => {
+                            if (resp.success) {
+                                sugerenciasContainer.innerHTML = `<div class="alert alert-success small">${resp.mensaje}</div>`;
+                            } else {
+                                sugerenciasContainer.innerHTML = `<div class="alert alert-danger small">${resp.mensaje || 'No se pudo crear el ticket'}</div>`;
+                            }
+                        })
+                        .catch(err => {
+                            sugerenciasContainer.innerHTML = `<div class="alert alert-danger small">Error conectando al servidor.</div>`;
+                        });
+                    });
+                }
+            }
+            sendBtn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            respuestaContent.innerHTML = `
+                <div class="alert alert-danger">
+                    Error de conexión. Por favor intenta nuevamente o solicita atención humana.
+                </div>
+            `;
+            // permitir reintento
+            form.querySelector('button[type="submit"]').disabled = false;
+        });
+        
+        input.value = '';
+    });
+
+    // Preguntas rápidas
+    document.querySelectorAll('.pregunta-rapida').forEach(btn => {
+        btn.addEventListener('click', function() {
+            input.value = this.getAttribute('data-pregunta');
+            form.dispatchEvent(new Event('submit'));
+        });
+    });
+
+    // Preguntas sugeridas (delegación de eventos)
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('pregunta-sugerida')) {
+            input.value = e.target.getAttribute('data-pregunta');
+            form.dispatchEvent(new Event('submit'));
+        }
+    });
+
+    // Contactar agente
+    contactarAgente.addEventListener('click', function(e) {
+        e.preventDefault();
+        ticketModal.show();
+    });
+
+    // Confirmar ticket
+    confirmarTicket.addEventListener('click', function() {
+        const descripcion = document.getElementById('ticketDescripcion').value || '';
+        const payload = { titulo: 'Solicitud desde Chatbot', descripcion: descripcion };
+        // Si existe una conversacion visible en la UI, intentar obtener id
+        // (la variable 'ultimaConversacionId' no existe; si el backend devolvió conversacion_id lo mantuvimos en data.conversacion_id cuando se renderizó)
+        // En caso de no tener conversacion, el endpoint requiere conversacion; intentaremos enviarlo vacío y el backend validará.
+        fetch('{% url "chatbot_create_ticket" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) {
+                // Mostrar confirmación y ocultar modal
+                const alertHtml = `<div class="alert alert-success small">${resp.mensaje} (ID: ${resp.ticket_id})</div>`;
+                document.getElementById('sugerenciasContainer').innerHTML = alertHtml;
+                ticketModal.hide();
+            } else {
+                const alertHtml = `<div class="alert alert-danger small">${resp.mensaje || 'No se pudo crear el ticket'}</div>`;
+                document.getElementById('sugerenciasContainer').innerHTML = alertHtml;
+            }
+        })
+        .catch(err => {
+            document.getElementById('sugerenciasContainer').innerHTML = `<div class="alert alert-danger small">Error creando ticket.</div>`;
+        });
+    });
+
+    // Focus en el input al cargar
+    input.focus();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block page_title %}Confirmar Rechazo{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="card">
+    <div class="card-body">
+      <h5>¿Rechazar y eliminar cobrador {{ user_obj.get_full_name|default:user_obj.username }}?</h5>
+      <form method="post">{% csrf_token %}
+        <button class="btn btn-danger">Confirmar rechazo</button>
+        <a href="{% url 'pending_cobradores' %}" class="btn btn-secondary ms-2">Cancelar</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

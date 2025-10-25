@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Iniciar sesión / Registro{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body">
+          <ul class="nav nav-tabs" id="authTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">Iniciar sesión</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="registro-cliente-tab" data-bs-toggle="tab" data-bs-target="#registro-cliente" type="button" role="tab">Registrarse (Cliente)</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="registro-cobrador-tab" data-bs-toggle="tab" data-bs-target="#registro-cobrador" type="button" role="tab">Registrarse (Cobrador)</button>
+            </li>
+          </ul>
+          <div class="tab-content mt-3">
+            <div class="tab-pane fade show active" id="login" role="tabpanel">
+              <form method="post" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="action" value="login">
+                {{ login_form.non_field_errors }}
+                <div class="mb-3">
+                  <label class="form-label">Usuario</label>
+                  {{ login_form.username }}
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Contraseña</label>
+                  {{ login_form.password }}
+                </div>
+                <div class="d-grid">
+                  <button class="btn btn-primary">Iniciar sesión</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="tab-pane fade" id="registro-cliente" role="tabpanel">
+              <form method="post" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="action" value="registrar_cliente">
+                {% for field in reg_cliente_form %}
+                <div class="mb-3">
+                  <label class="form-label">{{ field.label }}</label>
+                  {{ field }}
+                  {% if field.errors %}
+                  <div class="text-danger small">{{ field.errors|striptags }}</div>
+                  {% endif %}
+                </div>
+                {% endfor %}
+                <div class="d-grid">
+                  <button class="btn btn-success">Registrarme como Cliente</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="tab-pane fade" id="registro-cobrador" role="tabpanel">
+              <form method="post" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="action" value="registrar_cobrador">
+                {% for field in reg_cobrador_form %}
+                <div class="mb-3">
+                  <label class="form-label">{{ field.label }}</label>
+                  {{ field }}
++                  {% if field.errors %}
++                  <div class="text-danger small">{{ field.errors|striptags }}</div>
++                  {% endif %}
+                </div>
+                {% endfor %}
+                <div class="d-grid">
+                  <button class="btn btn-warning">Registrarme como Cobrador</button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-3">
+        <small class="text-muted">Si te registras como cobrador, tu cuenta quedará pendiente de aprobación.</small>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Helpers
+  function clearOptions(sel, placeholder) {
+    sel.innerHTML = '';
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = placeholder || '---';
+    sel.appendChild(opt);
+  }
+
+  async function fetchJSON(url) {
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    return await res.json();
+  }
+
+  // Selects cliente
+  const dep = document.getElementById('id_departamento');
+  const prov = document.getElementById('id_provincia');
+  const dist = document.getElementById('id_distrito');
+  const cas = document.getElementById('id_caserio');
+
+  // Selects cobrador (sufijo _c)
+  const depc = document.getElementById('id_departamento_c');
+  const provc = document.getElementById('id_provincia_c');
+  const distc = document.getElementById('id_distrito_c');
+  const casc = document.getElementById('id_caserio_c');
+
+  // Inicializar departamentos
+  async function loadDepartamentos() {
+    const list = await fetchJSON('{% url "api_departamentos" %}');
+    if (dep) {
+      clearOptions(dep, 'Selecciona Departamento');
+      list.forEach(d => {
+        const o = document.createElement('option'); o.value = d.id; o.textContent = d.nombre; dep.appendChild(o);
+      });
+    }
+    if (depc) {
+      clearOptions(depc, 'Selecciona Departamento');
+      list.forEach(d => {
+        const o = document.createElement('option'); o.value = d.id; o.textContent = d.nombre; depc.appendChild(o);
+      });
+    }
+  }
+
+  // Eventos
+  if (dep) dep.addEventListener('change', async function() {
+    clearOptions(prov, 'Cargando...'); clearOptions(dist, 'Selecciona Distrito'); clearOptions(cas, 'Selecciona Caserío');
+    if (!this.value) { clearOptions(prov, 'Selecciona Provincia'); return; }
+    const data = await fetchJSON('{% url "api_provincias" 0 %}'.replace('/0/', '/' + this.value + '/'));
+    clearOptions(prov, 'Selecciona Provincia');
+    data.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.nombre; prov.appendChild(o); });
+  });
+
+  if (provc) provc.addEventListener('change', async function() {
+    clearOptions(distc, 'Cargando...'); clearOptions(casc, 'Selecciona Caserío');
+    if (!this.value) { clearOptions(distc, 'Selecciona Distrito'); return; }
+    const data = await fetchJSON('{% url "api_distritos" 0 %}'.replace('/0/', '/' + this.value + '/'));
+    clearOptions(distc, 'Selecciona Distrito');
+    data.forEach(d => { const o = document.createElement('option'); o.value = d.id; o.textContent = d.nombre; distc.appendChild(o); });
+  });
+
+  if (prov) prov.addEventListener('change', async function() {
+    clearOptions(dist, 'Cargando...'); clearOptions(cas, 'Selecciona Caserío');
+    if (!this.value) { clearOptions(dist, 'Selecciona Distrito'); return; }
+    const data = await fetchJSON('{% url "api_distritos" 0 %}'.replace('/0/', '/' + this.value + '/'));
+    clearOptions(dist, 'Selecciona Distrito');
+    data.forEach(d => { const o = document.createElement('option'); o.value = d.id; o.textContent = d.nombre; dist.appendChild(o); });
+  });
+
+  if (dist) dist.addEventListener('change', async function() {
+    clearOptions(cas, 'Cargando...');
+    if (!this.value) { clearOptions(cas, 'Selecciona Caserío'); return; }
+    const data = await fetchJSON('{% url "api_caserios" 0 %}'.replace('/0/', '/' + this.value + '/'));
+    clearOptions(cas, 'Selecciona Caserío');
+    data.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.nombre; cas.appendChild(o); });
+  });
+
+  if (distc) distc.addEventListener('change', async function() {
+    clearOptions(casc, 'Cargando...');
+    if (!this.value) { clearOptions(casc, 'Selecciona Caserío'); return; }
+    const data = await fetchJSON('{% url "api_caserios" 0 %}'.replace('/0/', '/' + this.value + '/'));
+    clearOptions(casc, 'Selecciona Caserío');
+    data.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.nombre; casc.appendChild(o); });
+  });
+
+  // Cargar inicialmente
+  loadDepartamentos();
+});
+</script>
+{% endblock %}

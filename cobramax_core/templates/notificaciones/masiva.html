@@ -1,0 +1,183 @@
+<!-- notificaciones/templates/notificaciones/masiva.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h4 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-broadcast-tower"></i> Campaña de Notificación Masiva
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="masivaForm">
+                        {% csrf_token %}
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Información:</strong> Esta herramienta te permite enviar notificaciones 
+                            a múltiples clientes simultáneamente usando plantillas predefinidas.
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.tipo.id_for_label }}" class="form-label">Tipo de Notificación *</label>
+                                {{ form.tipo }}
+                                {% if form.tipo.errors %}
+                                <div class="text-danger small">{{ form.tipo.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.canal.id_for_label }}" class="form-label">Canal *</label>
+                                {{ form.canal }}
+                                {% if form.canal.errors %}
+                                <div class="text-danger small">{{ form.canal.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label for="{{ form.plantilla.id_for_label }}" class="form-label">Plantilla *</label>
+                                {{ form.plantilla }}
+                                {% if form.plantilla.errors %}
+                                <div class="text-danger small">{{ form.plantilla.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">
+                                    Selecciona la plantilla que se usará para todos los mensajes
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vista previa de plantilla -->
+                        <div class="row mb-4" id="vistaPrevia" style="display: none;">
+                            <div class="col-12">
+                                <div class="card border-left-primary">
+                                    <div class="card-header">
+                                        <h6 class="m-0 font-weight-bold text-primary">Vista Previa de la Plantilla</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="vistaPreviaAsunto" class="font-weight-bold mb-2"></div>
+                                        <div id="vistaPreviaMensaje" class="text-muted"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.filtro_zona.id_for_label }}" class="form-label">Filtrar por Zona</label>
+                                {{ form.filtro_zona }}
+                                {% if form.filtro_zona.errors %}
+                                <div class="text-danger small">{{ form.filtro_zona.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mt-4 pt-2">
+                                    <div class="form-check form-switch">
+                                        {{ form.solo_morosos }}
+                                        <label class="form-check-label" for="{{ form.solo_morosos.id_for_label }}">
+                                            Enviar solo a clientes morosos
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Estadísticas en tiempo real -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card border-left-success">
+                                    <div class="card-body">
+                                        <h6 class="font-weight-bold text-success">Resumen de la Campaña</h6>
+                                        <div class="row text-center">
+                                            <div class="col-md-4">
+                                                <div class="h5 mb-0" id="totalClientes">0</div>
+                                                <small class="text-muted">Total de Clientes</small>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="h5 mb-0" id="clientesActivos">0</div>
+                                                <small class="text-muted">Clientes Activos</small>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="h5 mb-0" id="clientesMorosos">0</div>
+                                                <small class="text-muted">Clientes Morosos</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Advertencia:</strong> Esta acción enviará notificaciones a todos los clientes 
+                            que coincidan con los filtros. Verifica cuidadosamente antes de proceder.
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'dashboard_notificaciones' %}" class="btn btn-secondary">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-success" id="btnEnviar">
+                                        <i class="fas fa-paper-plane"></i> Iniciar Campaña Masiva
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const plantillaSelect = document.getElementById('id_plantilla');
+    const vistaPrevia = document.getElementById('vistaPrevia');
+    const vistaPreviaAsunto = document.getElementById('vistaPreviaAsunto');
+    const vistaPreviaMensaje = document.getElementById('vistaPreviaMensaje');
+    
+    // Vista previa de plantilla
+    plantillaSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.value) {
+            // En una implementación real, harías una petición AJAX para obtener los detalles
+            // Por ahora simulamos con datos de las opciones
+            vistaPreviaAsunto.textContent = 'Asunto: ' + selectedOption.text;
+            vistaPreviaMensaje.textContent = 'Mensaje de ejemplo personalizado...';
+            vistaPrevia.style.display = 'block';
+        } else {
+            vistaPrevia.style.display = 'none';
+        }
+    });
+    
+    // Estadísticas en tiempo real (simuladas)
+    function actualizarEstadisticas() {
+        // En una implementación real, harías peticiones AJAX al servidor
+        document.getElementById('totalClientes').textContent = '~150';
+        document.getElementById('clientesActivos').textContent = '~120';
+        document.getElementById('clientesMorosos').textContent = '~30';
+    }
+    
+    // Actualizar estadísticas al cargar y cuando cambien los filtros
+    actualizarEstadisticas();
+    document.getElementById('id_filtro_zona').addEventListener('change', actualizarEstadisticas);
+    document.getElementById('id_solo_morosos').addEventListener('change', actualizarEstadisticas);
+    
+    // Confirmación antes de enviar
+    document.getElementById('masivaForm').addEventListener('submit', function(e) {
+        const total = document.getElementById('totalClientes').textContent;
+        if (!confirm(`¿Estás seguro de que deseas enviar notificaciones a aproximadamente ${total} clientes?`)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

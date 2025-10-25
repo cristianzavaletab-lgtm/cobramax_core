@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-money-bill-wave"></i> Pago: {{ pago.codigo_transaccion }}</h2>
+        <a href="{% url 'lista_pagos' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Información del Pago</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th width="40%">Código:</th>
+                                    <td><strong>{{ pago.codigo_transaccion }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>Cliente:</th>
+                                    <td>
+                                        {{ pago.cliente.nombre_completo }}<br>
+                                        <small class="text-muted">DNI: {{ pago.cliente.dni }}</small>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Monto:</th>
+                                    <td><strong class="text-success">S/ {{ pago.monto }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>Método:</th>
+                                    <td>
+                                        <span class="badge bg-info">{{ pago.get_metodo_pago_display }}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th width="40%">Estado:</th>
+                                    <td>
+                                        <span class="badge bg-{% if pago.estado == 'completado' %}success{% elif pago.estado == 'pendiente' %}warning{% else %}danger{% endif %}">
+                                            {{ pago.get_estado_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha Pago:</th>
+                                    <td>{{ pago.fecha_pago|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Registrado Por:</th>
+                                    <td>{{ pago.registrado_por.get_full_name|default:pago.registrado_por.username }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Validado Por:</th>
+                                    <td>
+                                        {% if pago.validado_por %}
+                                        {{ pago.validado_por.get_full_name|default:pago.validado_por.username }}
+                                        {% else %}
+                                        <span class="text-muted">Pendiente</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if pago.observaciones %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6>Observaciones</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    <p class="mb-0">{{ pago.observaciones }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if pago.comprobante %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6>Comprobante</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    <a href="{{ pago.comprobante.url }}" target="_blank" class="btn btn-outline-primary">
+                                        <i class="fas fa-file-pdf"></i> Ver Comprobante
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Acciones</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if pago.estado == 'pendiente' and user.tipo_usuario in 'admin,oficina' %}
+                        <a href="{% url 'validar_pago' pago.id %}" class="btn btn-warning">
+                            <i class="fas fa-check-circle"></i> Validar Pago
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.tipo_usuario in 'admin,oficina' %}
+                        <a href="/admin/cobranza/pago/{{ pago.id }}/change/" 
+                           class="btn btn-outline-secondary">
+                            <i class="fas fa-edit"></i> Editar en Admin
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información del Cliente -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Información del Cliente</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Nombre:</strong> {{ pago.cliente.nombre_completo }}</p>
+                    <p class="mb-1"><strong>DNI:</strong> {{ pago.cliente.dni }}</p>
+                    <p class="mb-1"><strong>Teléfono:</strong> {{ pago.cliente.telefono_principal }}</p>
+                    <p class="mb-1"><strong>Deuda Actual:</strong> 
+                        <span class="{% if pago.cliente.tiene_deuda %}text-danger{% else %}text-success{% endif %}">
+                            S/ {{ pago.cliente.deuda_actual }}
+                        </span>
+                    </p>
+                    <p class="mb-0"><strong>Zona:</strong> {{ pago.cliente.zona.nombre }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Reporte de Clientes</h1>
+<p>Total clientes: {{ total_clientes }}</p>
+<p>Activos: {{ clientes_activos }}</p>
+<p>Morosos: {{ clientes_morosos }}</p>
+<h2>Clientes (limitados)</h2>
+<div class="table-responsive">
+<table class="table">
+  <thead><tr><th>Nombre</th><th>DNI</th><th>Zona</th><th>Estado</th></tr></thead>
+  <tbody>
+    {% for cliente in clientes %}
+      <tr>
+        <td>{{ cliente.nombre }} {{ cliente.apellido }}</td>
+        <td>{{ cliente.dni }}</td>
+        <td>{{ cliente.zona.nombre }}</td>
+        <td>{{ cliente.estado }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="4">No hay clientes para mostrar.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,176 @@
+<!-- templates/clientes/detalle_cliente.html -->
+{% extends 'base.html' %}
+
+{% block page_title %}Detalle del Cliente{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'lista_clientes' %}" class="btn btn-secondary btn-sm">
+    <i class="fas fa-arrow-left"></i> Volver
+</a>
+<a href="{% url 'editar_cliente' cliente.id %}" class="btn btn-warning btn-sm">
+    <i class="fas fa-edit"></i> Editar
+</a>
+<a href="{% url 'registrar_pago_cliente' cliente.id %}" class="btn btn-success btn-sm">
+    <i class="fas fa-money-bill-wave"></i> Registrar Pago
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Información Personal -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-user"></i> Información Personal
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%"><i class="fas fa-user"></i> Nombre Completo:</th>
+                        <td><strong>{{ cliente.nombre_completo }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-id-card"></i> DNI:</th>
+                        <td>{{ cliente.dni }}</td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-phone"></i> Teléfono:</th>
+                        <td>
+                            <a href="tel:{{ cliente.telefono }}">{{ cliente.telefono }}</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-envelope"></i> Email:</th>
+                        <td>
+                            {% if cliente.email %}
+                                <a href="mailto:{{ cliente.email }}">{{ cliente.email }}</a>
+                            {% else %}
+                                <span class="text-muted">No registrado</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-map-marker-alt"></i> Dirección:</th>
+                        <td>{{ cliente.direccion }}</td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-map"></i> Zona:</th>
+                        <td><span class="badge bg-info">{{ cliente.zona.nombre }}</span></td>
+                    </tr>
+                </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Información del Servicio -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success">
+                    <i class="fas fa-wifi"></i> Información del Servicio
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%"><i class="fas fa-wifi"></i> Plan:</th>
+                        <td><strong>{{ cliente.plan }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-dollar-sign"></i> Monto Mensual:</th>
+                        <td><strong class="text-success">S/ {{ cliente.monto_mensual }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-calendar-day"></i> Día de Vencimiento:</th>
+                        <td>{{ cliente.dia_vencimiento }} de cada mes</td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-info-circle"></i> Estado:</th>
+                        <td>
+                            {% if cliente.estado == 'activo' %}
+                                <span class="badge bg-success">Activo</span>
+                            {% elif cliente.estado == 'suspendido' %}
+                                <span class="badge bg-warning">Suspendido</span>
+                            {% else %}
+                                <span class="badge bg-danger">Moroso</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-money-bill"></i> Saldo Pendiente:</th>
+                        <td>
+                            <strong class="{% if cliente.saldo_pendiente > 0 %}text-danger{% else %}text-success{% endif %}">
+                                S/ {{ cliente.saldo_pendiente }}
+                            </strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-calendar-alt"></i> Fecha Registro:</th>
+                        <td>{{ cliente.fecha_registro|date:"d/m/Y" }}</td>
+                    </tr>
+                </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Historial de Pagos -->
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-history"></i> Historial de Pagos (Últimos 10)
+        </h6>
+    </div>
+    <div class="card-body">
+        {% if pagos %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Monto</th>
+                        <th>Método</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pago in pagos %}
+                    <tr>
+                        <td>{{ pago.fecha_pago|date:"d/m/Y H:i" }}</td>
+                        <td><strong>S/ {{ pago.monto }}</strong></td>
+                        <td>{{ pago.get_metodo_pago_display }}</td>
+                        <td>
+                            {% if pago.estado == 'completado' %}
+                                <span class="badge bg-success">Completado</span>
+                            {% elif pago.estado == 'pendiente' %}
+                                <span class="badge bg-warning">Pendiente</span>
+                            {% else %}
+                                <span class="badge bg-danger">Rechazado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'detalle_pago' pago.id %}" class="btn btn-sm btn-info">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center text-muted py-4">
+            <i class="fas fa-inbox fa-3x mb-3"></i><br>
+            No hay pagos registrados para este cliente
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-users"></i> Reporte de Clientes</h2>
+        <a href="{% url 'dashboard_reportes' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al Dashboard
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-filter"></i> Filtros</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="zona" class="form-label">Zona:</label>
+                    <select class="form-select" id="zona" name="zona">
+                        <option value="">Todas las zonas</option>
+                        {% for zona in zonas %}
+                        <option value="{{ zona.id }}" 
+                                {% if filtros_aplicados.zona_id == zona.id|stringformat:"i" %}selected{% endif %}>
+                            {{ zona.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="estado" class="form-label">Estado:</label>
+                    <select class="form-select" id="estado" name="estado">
+                        <option value="">Todos los estados</option>
+                        {% for estado_val, estado_label in estados %}
+                        <option value="{{ estado_val }}" 
+                                {% if filtros_aplicados.estado == estado_val %}selected{% endif %}>
+                            {{ estado_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Clientes por Estado</h5>
+                </div>
+                <div class="card-body">
+                    {% if clientes_por_estado %}
+                    <canvas id="graficoEstados" height="200"></canvas>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                        <h5>No hay datos</h5>
+                        <p class="text-muted">No se encontraron clientes.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Clientes por Zona</h5>
+                </div>
+                <div class="card-body">
+                    {% if clientes_por_zona %}
+                    <canvas id="graficoZonas" height="200"></canvas>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                        <h5>No hay datos</h5>
+                        <p class="text-muted">No se encontraron clientes por zona.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Distribución por Estado</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Estado</th>
+                                    <th>Cantidad</th>
+                                    <th>Porcentaje</th>
+                                    <th>Deuda Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in clientes_por_estado %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-{% if item.estado == 'activo' %}success{% elif item.estado == 'moroso' %}danger{% else %}warning{% endif %}">
+                                            {{ item.get_estado_display|default:item.estado }}
+                                        </span>
+                                    </td>
+                                    <td>{{ item.total }}</td>
+                                    <td>{% widthratio item.total clientes.count 100 %}%</td>
+                                    <td class="text-danger">S/ {{ item.deuda_total|default:0|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-3">
+                                        No hay datos disponibles
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Distribución por Zona</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Zona</th>
+                                    <th>Clientes</th>
+                                    <th>Porcentaje</th>
+                                    <th>Deuda Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in clientes_por_zona %}
+                                <tr>
+                                    <td><strong>{{ item.zona__nombre }}</strong></td>
+                                    <td>{{ item.total }}</td>
+                                    <td>{% widthratio item.total clientes.count 100 %}%</td>
+                                    <td class="text-danger">S/ {{ item.deuda_total|default:0|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-3">
+                                        No hay datos disponibles
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Gráfico de estados
+{% if clientes_por_estado %}
+const ctxEstados = document.getElementById('graficoEstados').getContext('2d');
+new Chart(ctxEstados, {
+    type: 'pie',
+    data: {
+        labels: [{% for item in clientes_por_estado %}'{{ item.get_estado_display|default:item.estado }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for item in clientes_por_estado %}{{ item.total }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: [
+                '#28a745', '#dc3545', '#ffc107', '#17a2b8', '#6c757d'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            }
+        }
+    }
+});
+{% endif %}
+
+// Gráfico de zonas
+{% if clientes_por_zona %}
+const ctxZonas = document.getElementById('graficoZonas').getContext('2d');
+new Chart(ctxZonas, {
+    type: 'bar',
+    data: {
+        labels: [{% for item in clientes_por_zona %}'{{ item.zona__nombre }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Clientes',
+            data: [{% for item in clientes_por_zona %}{{ item.total }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Clientes Morosos</h1>
+<p>Total morosos: {{ total_morosos }}</p>
+<p>Deuda total: {{ deuda_total }}</p>
+<div class="table-responsive">
+<table class="table">
+  <thead><tr><th>Cliente</th><th>DNI</th><th>Zona</th><th>Deuda</th></tr></thead>
+  <tbody>
+    {% for cliente in clientes_morosos %}
+      <tr>
+        <td>{{ cliente.nombre }} {{ cliente.apellido }}</td>
+        <td>{{ cliente.dni }}</td>
+        <td>{{ cliente.zona.nombre }}</td>
+        <td>{{ cliente.deuda_actual }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="4">No hay clientes morosos.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

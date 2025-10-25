@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-money-bill-wave"></i> Reporte de Ingresos</h2>
+        <a href="{% url 'dashboard_reportes' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al Dashboard
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-filter"></i> Filtros</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="fecha_desde" class="form-label">Desde:</label>
+                    <input type="date" class="form-control" id="fecha_desde" name="fecha_desde" 
+                           value="{{ filtros_aplicados.fecha_desde }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="fecha_hasta" class="form-label">Hasta:</label>
+                    <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta"
+                           value="{{ filtros_aplicados.fecha_hasta }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="zona" class="form-label">Zona:</label>
+                    <select class="form-select" id="zona" name="zona">
+                        <option value="">Todas las zonas</option>
+                        {% for zona in zonas %}
+                        <option value="{{ zona.id }}" 
+                                {% if filtros_aplicados.zona_id == zona.id|stringformat:"i" %}selected{% endif %}>
+                            {{ zona.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="metodo_pago" class="form-label">Método de Pago:</label>
+                    <select class="form-select" id="metodo_pago" name="metodo_pago">
+                        <option value="">Todos los métodos</option>
+                        {% for metodo_val, metodo_label in metodos_pago %}
+                        <option value="{{ metodo_val }}" 
+                                {% if filtros_aplicados.metodo_pago == metodo_val %}selected{% endif %}>
+                            {{ metodo_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
+                    </button>
+                    <a href="{% url 'reporte_ingresos' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resumen -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h5>Total Ingresos</h5>
+                    <h3>S/ {{ total_ingresos|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h5>Total Pagos</h5>
+                    <h3>{{ total_pagos }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h5>Promedio por Pago</h5>
+                    <h3>S/ {{ promedio_pago|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Gráfico por Día -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Ingresos por Día</h5>
+                </div>
+                <div class="card-body">
+                    {% if ingresos_por_dia %}
+                    <canvas id="graficoPorDia" height="250"></canvas>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                        <h5>No hay datos</h5>
+                        <p class="text-muted">No se encontraron ingresos en el período seleccionado.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico por Zona -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Ingresos por Zona</h5>
+                </div>
+                <div class="card-body">
+                    {% if ingresos_por_zona %}
+                    <canvas id="graficoPorZona" height="250"></canvas>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                        <h5>No hay datos</h5>
+                        <p class="text-muted">No se encontraron ingresos por zona.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Detalles -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Detalle de Pagos</h5>
+        </div>
+        <div class="card-body">
+            {% if pagos %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Cliente</th>
+                            <th>Monto</th>
+                            <th>Método</th>
+                            <th>Fecha</th>
+                            <th>Zona</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pago in pagos %}
+                        <tr>
+                            <td><strong>{{ pago.codigo_transaccion|default:"N/A" }}</strong></td>
+                            <td>{{ pago.cliente.nombre_completo }}</td>
+                            <td class="text-success"><strong>S/ {{ pago.monto|floatformat:2 }}</strong></td>
+                            <td><span class="badge bg-info">{{ pago.get_metodo_pago_display }}</span></td>
+                            <td>{{ pago.fecha_pago|date:"d/m/Y H:i" }}</td>
+                            <td><span class="badge bg-secondary">{{ pago.cliente.zona.nombre }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h5>No se encontraron pagos</h5>
+                <p class="text-muted">No hay pagos que coincidan con los filtros aplicados.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Gráfico de ingresos por día
+{% if ingresos_por_dia %}
+const ctxDia = document.getElementById('graficoPorDia').getContext('2d');
+new Chart(ctxDia, {
+    type: 'bar',
+    data: {
+        labels: [{% for item in ingresos_por_dia %}'{{ item.fecha|date:"d/m" }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Ingresos (S/)',
+            data: [{% for item in ingresos_por_dia %}{{ item.total|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return 'S/ ' + value;
+                    }
+                }
+            }
+        }
+    }
+});
+{% endif %}
+
+// Gráfico de ingresos por zona
+{% if ingresos_por_zona %}
+const ctxZona = document.getElementById('graficoPorZona').getContext('2d');
+new Chart(ctxZona, {
+    type: 'pie',
+    data: {
+        labels: [{% for item in ingresos_por_zona %}'{{ item.cliente__zona__nombre }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for item in ingresos_por_zona %}{{ item.total|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,158 @@
+<!-- notificaciones/templates/notificaciones/form_plantilla.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h4 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-{{ titulo|lower }}"></i> {{ titulo }}
+                        {% if plantilla %}
+                        <small class="text-muted">- {{ plantilla.nombre }}</small>
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="plantillaForm">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.nombre.id_for_label }}" class="form-label">Nombre de la Plantilla *</label>
+                                {{ form.nombre }}
+                                {% if form.nombre.errors %}
+                                <div class="text-danger small">{{ form.nombre.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">Nombre descriptivo para identificar la plantilla</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.tipo.id_for_label }}" class="form-label">Tipo *</label>
+                                {{ form.tipo }}
+                                {% if form.tipo.errors %}
+                                <div class="text-danger small">{{ form.tipo.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.canal.id_for_label }}" class="form-label">Canal *</label>
+                                {{ form.canal }}
+                                {% if form.canal.errors %}
+                                <div class="text-danger small">{{ form.canal.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mt-4 pt-2">
+                                    <div class="form-check form-switch">
+                                        {{ form.activa }}
+                                        <label class="form-check-label" for="{{ form.activa.id_for_label }}">
+                                            Plantilla activa
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="{{ form.asunto.id_for_label }}" class="form-label">Asunto *</label>
+                                {{ form.asunto }}
+                                {% if form.asunto.errors %}
+                                <div class="text-danger small">{{ form.asunto.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">Asunto del mensaje (para email) o título (para WhatsApp/SMS)</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="{{ form.mensaje.id_for_label }}" class="form-label">Mensaje *</label>
+                                {{ form.mensaje }}
+                                {% if form.mensaje.errors %}
+                                <div class="text-danger small">{{ form.mensaje.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <strong>Variables disponibles:</strong> 
+                                    {nombre}, {deuda}, {fecha_limite}, {servicio}, {zona}, {cobrador}, {monto_pagado}, {fecha_actual}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vista Previa -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="card border-left-info">
+                                    <div class="card-header">
+                                        <h6 class="m-0 font-weight-bold text-info">
+                                            <i class="fas fa-eye"></i> Vista Previa
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="vistaPreviaAsunto" class="font-weight-bold mb-2"></div>
+                                        <div id="vistaPreviaMensaje" class="text-muted"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'lista_plantillas' %}" class="btn btn-secondary">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> 
+                                        {% if plantilla %}Actualizar Plantilla{% else %}Crear Plantilla{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const asuntoInput = document.getElementById('id_asunto');
+    const mensajeInput = document.getElementById('id_mensaje');
+    const vistaPreviaAsunto = document.getElementById('vistaPreviaAsunto');
+    const vistaPreviaMensaje = document.getElementById('vistaPreviaMensaje');
+    
+    function actualizarVistaPrevia() {
+        const asunto = asuntoInput.value || 'Sin asunto';
+        const mensaje = mensajeInput.value || 'Sin mensaje';
+        
+        // Aplicar formato básico a la vista previa
+        vistaPreviaAsunto.innerHTML = `<strong>Asunto:</strong> ${asunto}`;
+        vistaPreviaMensaje.innerHTML = `<strong>Mensaje:</strong><br>${mensaje.replace(/\n/g, '<br>')}`;
+    }
+    
+    // Actualizar vista previa cuando cambien los inputs
+    asuntoInput.addEventListener('input', actualizarVistaPrevia);
+    mensajeInput.addEventListener('input', actualizarVistaPrevia);
+    
+    // Actualizar vista previa inicial
+    actualizarVistaPrevia();
+});
+</script>
+
+<style>
+#id_mensaje {
+    min-height: 150px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.form-label {
+    font-weight: 600;
+}
+</style>
+{% endblock %}

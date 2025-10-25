@@ -1,0 +1,47 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: cobramax_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  web:
+    build: .
+    container_name: cobramax_web
+    command: gunicorn cobramax_core.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  celery_worker:
+    image: python:3.11-slim
+    container_name: cobramax_celery_worker
+    working_dir: /app
+    command: bash -c "pip install -r requirements.txt && celery -A cobramax_core worker --loglevel=info"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  celery_beat:
+    image: python:3.11-slim
+    container_name: cobramax_celery_beat
+    working_dir: /app
+    command: bash -c "pip install -r requirements.txt && celery -A cobramax_core beat --loglevel=info"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+# Notes: This compose file is a development scaffold. Adjust images, build context and volumes for production.

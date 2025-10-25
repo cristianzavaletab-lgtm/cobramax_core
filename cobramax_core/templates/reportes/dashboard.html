@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-chart-bar"></i> Dashboard de Reportes</h2>
+        <div>
+            <a href="{% url 'reporte_ingresos' %}" class="btn btn-outline-primary">
+                <i class="fas fa-money-bill-wave"></i> Reporte de Ingresos
+            </a>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Resumen -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Clientes</h5>
+                    <h2>{{ total_clientes }}</h2>
+                    <p class="card-text">Registrados en sistema</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Clientes Activos</h5>
+                    <h2>{{ clientes_activos }}</h2>
+                    <p class="card-text">
+                        {% widthratio clientes_activos total_clientes 100 %}% del total
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Clientes Morosos</h5>
+                    <h2>{{ clientes_morosos }}</h2>
+                    <p class="card-text">
+                        {% widthratio clientes_morosos total_clientes 100 %}% del total
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Ingresos del Mes</h5>
+                    <h2>S/ {{ total_ingresos_mes|floatformat:2 }}</h2>
+                    <p class="card-text">{{ total_pagos_mes }} pagos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Gráfico de Ingresos últimos 7 días -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Ingresos últimos 7 días</h5>
+                </div>
+                <div class="card-body">
+                    {% if pagos_7dias %}
+                    <canvas id="graficoIngresos" height="250"></canvas>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <h5>No hay datos para mostrar</h5>
+                        <p class="text-muted">No se registraron pagos en los últimos 7 días.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Métodos de Pago -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-credit-card"></i> Métodos de Pago</h5>
+                </div>
+                <div class="card-body">
+                    {% if metodos_pago %}
+                    <canvas id="graficoMetodosPago" height="250"></canvas>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-credit-card fa-3x text-muted mb-3"></i>
+                        <h5>No hay datos</h5>
+                        <p class="text-muted">No se registraron pagos.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas por Zona -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-map-marker-alt"></i> Estadísticas por Zona</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Zona</th>
+                                    <th>Total Clientes</th>
+                                    <th>Clientes Morosos</th>
+                                    <th>Ingresos del Mes</th>
+                                    <th>Tasa Morosidad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for zona in zonas_stats %}
+                                <tr>
+                                    <td><strong>{{ zona.nombre }}</strong></td>
+                                    <td>{{ zona.total_clientes|default:0 }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if zona.clientes_morosos > 0 %}danger{% else %}success{% endif %}">
+                                            {{ zona.clientes_morosos|default:0 }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">S/ {{ zona.ingresos_mes|default:0|floatformat:2 }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if zona.total_clientes > 0 %}
+                                            {% widthratio zona.clientes_morosos zona.total_clientes 100 %}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-3">
+                                        No hay zonas registradas
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones Rápidas -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-money-bill-wave fa-3x text-primary mb-3"></i>
+                    <h5>Reporte de Ingresos</h5>
+                    <p class="text-muted">Análisis detallado de ingresos y pagos</p>
+                    <a href="{% url 'reporte_ingresos' %}" class="btn btn-primary">Ver Reporte</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                    <h5>Clientes Morosos</h5>
+                    <p class="text-muted">Listado y análisis de deudores</p>
+                    <a href="{% url 'reporte_morosos' %}" class="btn btn-warning">Ver Reporte</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-info mb-3"></i>
+                    <h5>Reporte de Clientes</h5>
+                    <p class="text-muted">Estadísticas generales de clientes</p>
+                    <a href="{% url 'reporte_clientes' %}" class="btn btn-info">Ver Reporte</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Usar los endpoints JSON para poblar los gráficos (dinámico)
+async function fetchIngresos(dias=7){
+    const resp = await fetch(`{% url 'api_ingresos_por_dia' %}?dias=${dias}`);
+    const json = await resp.json();
+    return json.datos || [];
+}
+
+async function fetchClientesPorZona(){
+    const resp = await fetch(`{% url 'api_clientes_por_zona' %}`);
+    const json = await resp.json();
+    return json.zonas || [];
+}
+
+function formatCurrency(v){
+    return 'S/ ' + Number(v).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+document.addEventListener('DOMContentLoaded', async function(){
+    // Ingresos últimos N días -> gráfico de línea
+    const canvasIngresos = document.getElementById('graficoIngresos');
+    if(canvasIngresos){
+        const datos = await fetchIngresos(7);
+        const labels = datos.map(d => {
+            const dt = new Date(d.fecha);
+            return dt.getDate().toString().padStart(2,'0') + '/' + (dt.getMonth()+1).toString().padStart(2,'0');
+        });
+        const valores = datos.map(d => Number(d.total || 0));
+
+        new Chart(canvasIngresos.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Ingresos (S/)',
+                    data: valores,
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { title: { display: true, text: 'Evolución de Ingresos (7 días)' } },
+                scales: { y: { beginAtZero: true, ticks: { callback: v => formatCurrency(v) } } }
+            }
+        });
+    }
+
+    // Métodos de pago -> doughnut (desde endpoint JSON)
+    const canvasMetodos = document.getElementById('graficoMetodosPago');
+    if(canvasMetodos){
+        try{
+            const r = await fetch('{% url "api_metodos_pago" %}');
+            const j = await r.json();
+            const etiquetas = j.metodos.map(m => m.metodo);
+            const datosValores = j.metodos.map(m => Number(m.total || 0));
+
+            // Si no hay datos, usar placeholder
+            if(etiquetas.length === 0){
+                etiquetas.push('Efectivo','Tarjeta','Transferencia');
+                datosValores.push(0,0,0);
+            }
+
+            new Chart(canvasMetodos.getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: etiquetas, datasets: [{ data: datosValores, backgroundColor: ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40'] }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'Distribución por Método de Pago' } } }
+            });
+        }catch(err){
+            console.error('Error cargando metodos de pago', err);
+        }
+    }
+});
+</script>
+{% endblock %}

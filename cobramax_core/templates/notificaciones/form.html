@@ -1,0 +1,219 @@
+<!-- notificaciones/templates/notificaciones/form.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h4 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-{{ titulo|lower }}"></i> {{ titulo }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="notificacionForm">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.tipo.id_for_label }}" class="form-label">Tipo de Notificación *</label>
+                                {{ form.tipo }}
+                                {% if form.tipo.errors %}
+                                <div class="text-danger small">{{ form.tipo.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.canal.id_for_label }}" class="form-label">Canal *</label>
+                                {{ form.canal }}
+                                {% if form.canal.errors %}
+                                <div class="text-danger small">{{ form.canal.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="{{ form.cliente.id_for_label }}" class="form-label">Cliente *</label>
+                                {{ form.cliente }}
+                                {% if form.cliente.errors %}
+                                <div class="text-danger small">{{ form.cliente.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">Selecciona el cliente destinatario de la notificación</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="{{ form.asunto.id_for_label }}" class="form-label">Asunto *</label>
+                                {{ form.asunto }}
+                                {% if form.asunto.errors %}
+                                <div class="text-danger small">{{ form.asunto.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="{{ form.mensaje.id_for_label }}" class="form-label">Mensaje *</label>
+                                {{ form.mensaje }}
+                                {% if form.mensaje.errors %}
+                                <div class="text-danger small">{{ form.mensaje.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <strong>Variables disponibles:</strong> 
+                                    {nombre}, {deuda}, {fecha_limite}, {servicio}, {zona}, {cobrador}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.programada_para.id_for_label }}" class="form-label">Programar Envío</label>
+                                {{ form.programada_para }}
+                                {% if form.programada_para.errors %}
+                                <div class="text-danger small">{{ form.programada_para.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">Dejar vacío para enviar inmediatamente</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mt-4 pt-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="usarPlantilla">
+                                        <label class="form-check-label" for="usarPlantilla">
+                                            Usar plantilla predefinida
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Selector de Plantillas (oculto inicialmente) -->
+                        <div class="row mb-3" id="selectorPlantilla" style="display: none;">
+                            <div class="col-12">
+                                <label for="plantillaSelect" class="form-label">Seleccionar Plantilla</label>
+                                <select class="form-select" id="plantillaSelect">
+                                    <option value="">Selecciona una plantilla...</option>
+                                </select>
+                                <div class="form-text">Al seleccionar una plantilla, se cargará automáticamente el asunto y mensaje</div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'lista_notificaciones' %}" class="btn btn-secondary">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane"></i> {{ titulo }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle selector de plantillas
+    const usarPlantillaCheckbox = document.getElementById('usarPlantilla');
+    const selectorPlantilla = document.getElementById('selectorPlantilla');
+    
+    usarPlantillaCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            selectorPlantilla.style.display = 'block';
+            cargarPlantillas();
+        } else {
+            selectorPlantilla.style.display = 'none';
+        }
+    });
+    
+    // Cargar plantillas via AJAX
+    function cargarPlantillas() {
+        const tipoSelect = document.getElementById('id_tipo');
+        const canalSelect = document.getElementById('id_canal');
+        const plantillaSelect = document.getElementById('plantillaSelect');
+        
+        const tipo = tipoSelect.value;
+        const canal = canalSelect.value;
+        
+        if (!tipo || !canal) {
+            alert('Selecciona tipo y canal primero');
+            usarPlantillaCheckbox.checked = false;
+            selectorPlantilla.style.display = 'none';
+            return;
+        }
+        
+        fetch(`{% url 'api_plantillas' %}?tipo=${tipo}&canal=${canal}`)
+            .then(response => response.json())
+            .then(plantillas => {
+                plantillaSelect.innerHTML = '<option value="">Selecciona una plantilla...</option>';
+                plantillas.forEach(plantilla => {
+                    const option = document.createElement('option');
+                    option.value = plantilla.id;
+                    option.textContent = plantilla.nombre;
+                    option.dataset.asunto = plantilla.asunto;
+                    option.dataset.mensaje = plantilla.mensaje;
+                    plantillaSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error cargando plantillas:', error);
+            });
+    }
+    
+    // Aplicar plantilla seleccionada
+    document.getElementById('plantillaSelect').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.value) {
+            document.getElementById('id_asunto').value = selectedOption.dataset.asunto;
+            document.getElementById('id_mensaje').value = selectedOption.dataset.mensaje;
+        }
+    });
+    
+    // Recargar plantillas cuando cambien tipo o canal
+    document.getElementById('id_tipo').addEventListener('change', function() {
+        if (usarPlantillaCheckbox.checked) {
+            cargarPlantillas();
+        }
+    });
+    
+    document.getElementById('id_canal').addEventListener('change', function() {
+        if (usarPlantillaCheckbox.checked) {
+            cargarPlantillas();
+        }
+    });
+});
+</script>
+
+<style>
+.form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+    border-radius: 0.35rem;
+    border: 1px solid #d1d3e2;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,123 @@
+<!-- chatbot/templates/chatbot/gestion_preguntas.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-question-circle text-primary"></i> Gestión de Preguntas Frecuentes</h1>
+        <a href="{% url 'agregar_pregunta_frecuente' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva Pregunta
+        </a>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Total Preguntas</h5>
+                    <h2>{{ total_preguntas }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Activas</h5>
+                    <h2>{{ preguntas_activas }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5>Total Consultas</h5>
+                    <h2>{{ total_consultas }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>Categorías</h5>
+                    <h2>{{ categorias|length }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de preguntas -->
+    <div class="card shadow">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-list"></i> Lista de Preguntas Frecuentes</h5>
+        </div>
+        <div class="card-body">
+            {% if preguntas %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Pregunta</th>
+                            <th>Categoría</th>
+                            <th>Consultas</th>
+                            <th>Estado</th>
+                            <th>Creada</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pregunta in preguntas %}
+                        <tr>
+                            <td>
+                                <strong>{{ pregunta.pregunta }}</strong><br>
+                                <small class="text-muted">{{ pregunta.respuesta|truncatewords:10 }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ pregunta.categoria }}">
+                                    {{ pregunta.get_categoria_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ pregunta.veces_consultada }}</span>
+                            </td>
+                            <td>
+                                {% if pregunta.activa %}
+                                <span class="badge bg-success">Activa</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactiva</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ pregunta.creada_en|date:"d/m/Y" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'editar_pregunta_frecuente' pregunta.id %}" 
+                                       class="btn btn-outline-primary" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'toggle_pregunta_frecuente' pregunta.id %}" 
+                                       class="btn btn-{% if pregunta.activa %}warning{% else %}success{% endif %}" 
+                                       title="{% if pregunta.activa %}Desactivar{% else %}Activar{% endif %}">
+                                        <i class="fas fa-{% if pregunta.activa %}times{% else %}check{% endif %}"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                <h4>No hay preguntas frecuentes</h4>
+                <p class="text-muted">Comienza agregando tu primera pregunta frecuente.</p>
+                <a href="{% url 'agregar_pregunta_frecuente' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Agregar Primera Pregunta
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

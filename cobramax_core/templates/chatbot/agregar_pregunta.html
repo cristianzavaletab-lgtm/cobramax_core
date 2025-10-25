@@ -1,0 +1,85 @@
+<!-- chatbot/templates/chatbot/agregar_pregunta.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-plus"></i> Agregar Pregunta Frecuente</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label">Pregunta *</label>
+                                {{ form.pregunta }}
+                                {% if form.pregunta.errors %}
+                                <div class="text-danger small">{{ form.pregunta.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label">Respuesta *</label>
+                                {{ form.respuesta }}
+                                {% if form.respuesta.errors %}
+                                <div class="text-danger small">{{ form.respuesta.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Categoría *</label>
+                                {{ form.categoria }}
+                                {% if form.categoria.errors %}
+                                <div class="text-danger small">{{ form.categoria.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Palabras Clave</label>
+                                {{ form.palabras_clave }}
+                                {% if form.palabras_clave.errors %}
+                                <div class="text-danger small">{{ form.palabras_clave.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">
+                                    Separar con comas. Ej: pago, factura, internet, servicio
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    {{ form.activa }}
+                                    <label class="form-check-label" for="{{ form.activa.id_for_label }}">
+                                        Pregunta activa
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'gestion_preguntas_frecuentes' %}" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left"></i> Volver
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Guardar Pregunta
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
