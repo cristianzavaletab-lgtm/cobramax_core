@@ -3,16 +3,17 @@ Django settings for cobramax_core project.
 """
 
 import os
+import dj_database_url
 from pathlib import Path
 
 # RUTA BASE DEL PROYECTO
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# CLAVE SECRETA (no compartas en producción)
-SECRET_KEY = 'django-insecure-ltvkw+4+jzvy)8bv*#j2&a-86*h&4ss@)p3+vwg0f%^5exxx#w'
+# CLAVE SECRETA (leer desde variable de entorno en producción)
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-ltvkw+4+jzvy)8bv*#j2&a-86*h&4ss@)p3+vwg0f%^5exxx#w')
 
-# MODO DEBUG
-DEBUG = True
+# MODO DEBUG (leer desde entorno): usar 'True' o 'False'
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = ['cobramax-core.onrender.com', 'localhost', '127.0.0.1']
 
@@ -42,6 +43,8 @@ INSTALLED_APPS = [
 # MIDDLEWARE
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # WhiteNoise: servir archivos estáticos eficientemente en producción
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',  # ← Este debe estar presente
@@ -73,16 +76,32 @@ TEMPLATES = [
 WSGI_APPLICATION = 'cobramax_core.wsgi.application'
 
 # CONFIGURACIÓN DE BASE DE DATOS (PostgreSQL)
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'cobramax_db',
-        'USER': 'cobramax_user',
-        'PASSWORD': 'password123',
-        'HOST': 'localhost',
-        'PORT': '5432',
+# Configuración de la base de datos: preferir DATABASE_URL (Render/Heroku style)
+database_url = os.environ.get('DATABASE_URL')
+if not database_url:
+    # construir URL a partir de variables POSTGRES_* si existe
+    pg_user = os.environ.get('POSTGRES_USER')
+    pg_password = os.environ.get('POSTGRES_PASSWORD')
+    pg_host = os.environ.get('POSTGRES_HOST')
+    pg_port = os.environ.get('POSTGRES_PORT', '5432')
+    pg_db = os.environ.get('POSTGRES_DB')
+    if pg_user and pg_password and pg_host and pg_db:
+        database_url = f"postgresql://{pg_user}:{pg_password}@{pg_host}:{pg_port}/{pg_db}"
+
+# Si database_url está definido, usar dj_database_url para parsearla.
+# Establecer conn_max_age para conexiones persistentes en producción.
+if database_url:
+    DATABASES = {
+        'default': dj_database_url.config(default=database_url, conn_max_age=600)
     }
-}
+else:
+    # Fallback a sqlite para entornos de desarrollo sin variables de BD
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # VALIDACIÓN DE CONTRASEÑAS
 AUTH_PASSWORD_VALIDATORS = [
@@ -100,6 +119,12 @@ USE_TZ = True
 
 # ARCHIVOS ESTÁTICOS
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+# Uso de WhiteNoise para servir archivos estáticos en producción
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Si la aplicación está detrás de un proxy (Render), permitir detectar HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # CLAVE PRIMARIA POR DEFECTO
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
